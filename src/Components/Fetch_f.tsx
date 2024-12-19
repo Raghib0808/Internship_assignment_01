@@ -1,54 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { DataTable } from 'primereact/datatable';
+import { DataTable, DataTableStateEvent, DataTableValue } from 'primereact/datatable';
+import type { DataTableSelectionMultipleChangeEvent } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Checkbox } from 'primereact/checkbox';
-import { classNames } from "primereact/utils";
 import { InputSwitch, InputSwitchChangeEvent } from 'primereact/inputswitch';
 import 'primereact/resources/themes/saga-blue/theme.css';   
 import 'primereact/resources/primereact.min.css';          
-import 'primeicons/primeicons.css';                     
+import 'primeicons/primeicons.css';                  
 
-
-
-        
-
-
+interface Item extends DataTableValue {
+  id: number;
+  title: string;
+  place_of_origin: string;
+  artist_display: string;
+  date_start: number;
+  date_end: number;
+}
 
 const Fetch_f: React.FC = () => {
 
-  // declaring interface Item for storing the data content for table;
-  interface Item {
-    id: number;
-    title: string;
-    place_of_origin: string;
-    artist_display: string;
-    date_start: number;
-    date_end: number;
-  }
-
-  interface SelectionEvent {
-    value: Item[];
-  }
+   const [data, setData] = useState<Item[]>([]);
+   const [index, setindex] = useState<number>(1);
+   const [stored, setStored] = useState<Item[]>([]);
+   const [rowclick, setRowClick] = useState<boolean>(true);
   
-
-  
-  // declaration of usestate variables for dynamic content storage;
-  const [data, setData] = useState<Item[]>([]);
-  const [index,setindex]=useState<number>(1);
-  const [stored,setStored]=useState<Item[]|null>(null);
-  const [rowclick,setRowClick]=useState<boolean>(true);
-  console.log(rowclick);
-  
-
-  // 
-  const inc=()=>{
-      setindex(index+1);
-  }
-  const dec=()=>{
-      if(index-1>=0)
-      setindex(index-1);
-  }
-
 
   // getting the data from the api using fetch;
    const retrieve = async () => {
@@ -96,33 +70,32 @@ const Fetch_f: React.FC = () => {
                 <label htmlFor="input-rowclick">Row Click</label>
             </div>
 
+      <DataTable
+        value={data}
+        paginator
+        rows={12}
+        showGridlines 
+        tableStyle={{ minWidth: '50rem' }}
+        selectionMode={rowclick ? null : 'multiple'}
+        selection={stored}
+        onSelectionChange={(e: DataTableSelectionMultipleChangeEvent<Item[]>) => setStored(e.value)}
+        dataKey="id"
+        totalRecords={10528}
+        lazy
+        first={(index - 1) * 12}
+        onPage={(e: DataTableStateEvent) => setindex((e.first ?? 0) / 12 + 1)}
+      >
 
-            <DataTable 
-    value={data} 
-    paginator 
-    rows={12} 
-    showGridlines 
-    tableStyle={{ minWidth: '50rem' }} 
-    selectionMode={rowclick ? undefined : 'multiple'} 
-    selection={stored!}
-    onSelectionChange={(e: SelectionEvent) => setStored(e.value)} 
-    dataKey="id"
-    totalRecords={10528} 
-    lazy 
-    first={(index - 1) * 12}
-    onPage={(e) => setindex((e.page ?? 0) + 1)}
->
 
     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }}></Column>
-    <Column field="title" header="Title"></Column>
+    <Column field="   title" header="Title"></Column>
     <Column field="place_of_origin" header="Origin"></Column>
     <Column field="artist_display" header="Artist"></Column>
     <Column field="date_start" header="Start"></Column>
     <Column field="date_end" header="End"></Column>
     </DataTable>
     
-            {/* <button onClick={inc}>Increase</button>
-            <button onClick={dec}>decrease</button> */}
+            
     </div>
     
   );
