@@ -15,6 +15,8 @@ import 'primeicons/primeicons.css';
 
 
 const Fetch_f: React.FC = () => {
+
+  // declaring interface Item for storing the data content for table;
   interface Item {
     id: number;
     title: string;
@@ -30,7 +32,7 @@ const Fetch_f: React.FC = () => {
   
 
   
- 
+  // declaration of usestate variables for dynamic content storage;
   const [data, setData] = useState<Item[]>([]);
   const [index,setindex]=useState<number>(1);
   const [stored,setStored]=useState<Item[]|null>(null);
@@ -38,28 +40,41 @@ const Fetch_f: React.FC = () => {
   console.log(rowclick);
   
 
+  // 
   const inc=()=>{
       setindex(index+1);
   }
   const dec=()=>{
+      if(index-1>=0)
       setindex(index-1);
   }
-  // Function to fetch data from the API
-  const retrieve = async () => {
+
+
+  // getting the data from the api using fetch;
+   const retrieve = async () => {
     try {
       const response = await fetch(`https://api.artic.edu/api/v1/artworks?page=${index}`);
       const result = await response.json();
       console.log(result);
       
-      const items = result.data.map((item: any) => ({
-        id:item.artist_id,
-        title:item.title,        
-        place_of_origin:item.place_of_origin,
-        artist_display:item.artist_display,
-        date_start:item.date_start,
-        date_end:item.date_end,
-
-      }));
+      const seenIds = new Set<number>();
+    const items = result.data
+      .filter((item: any) => item.artist_id && typeof item.artist_id === 'number') 
+      .map((item: any) => ({
+        id: item.artist_id,
+        title: item.title,
+        place_of_origin: item.place_of_origin,
+        artist_display: item.artist_display,
+        date_start: item.date_start,
+        date_end: item.date_end,
+      }))
+      .filter((item: Item) => {
+        if (seenIds.has(item.id)) {
+          return false;  
+        }
+        seenIds.add(item.id);
+        return true;
+      });
       console.log(items);
       setData(items);
     } catch (error) {
@@ -68,6 +83,8 @@ const Fetch_f: React.FC = () => {
   };
   console.log(stored);
   
+
+  // refreshing the table when the user changes page;
   useEffect(() => {
     retrieve();
   }, [index]);
@@ -80,8 +97,21 @@ const Fetch_f: React.FC = () => {
             </div>
 
 
-    <DataTable value={data} showGridlines tableStyle={{ minWidth: '50rem' }}  selectionMode={rowclick ? undefined : 'multiple'} selection={stored!}
-                        onSelectionChange={(e) => setStored(e.value)} dataKey="id">
+            <DataTable 
+    value={data} 
+    paginator 
+    rows={12} 
+    showGridlines 
+    tableStyle={{ minWidth: '50rem' }} 
+    selectionMode={rowclick ? undefined : 'multiple'} 
+    selection={stored!}
+    onSelectionChange={(e: SelectionEvent) => setStored(e.value)} 
+    dataKey="id"
+    totalRecords={10528} 
+    lazy 
+    first={(index - 1) * 12}
+    onPage={(e) => setindex((e.page ?? 0) + 1)}
+>
 
     <Column selectionMode="multiple" headerStyle={{ width: '3rem' }}></Column>
     <Column field="title" header="Title"></Column>
@@ -91,8 +121,8 @@ const Fetch_f: React.FC = () => {
     <Column field="date_end" header="End"></Column>
     </DataTable>
     
-            <button onClick={inc}>Increase</button>
-            <button onClick={dec}>decrease</button>
+            {/* <button onClick={inc}>Increase</button>
+            <button onClick={dec}>decrease</button> */}
     </div>
     
   );
